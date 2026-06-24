@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jsPDF';
+import { jsPDF } from 'jspdf';
 import { useNavigate } from 'react-router-dom';
 import ResumeTemplate from '../components/ResumeTemplate';
 
