@@ -1,5 +1,5 @@
 const IS_DEV = window.location.hostname === 'localhost';
-const PRODUCTION_BACKEND_URL = "https://resume-elet.onrender.com";
+const PRODUCTION_BACKEND_URL = "https://resume-pjj7.onrender.com";
 const BACKEND_URL = IS_DEV ? "http://localhost:5000" : PRODUCTION_BACKEND_URL;
 export const autoGenerateResume = async (basicInfo) => {
   const response = await fetch(`${BACKEND_URL}/generate-resume`, {
