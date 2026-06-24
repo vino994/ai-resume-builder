@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import jsPDF from 'jsPDF';
 import { useNavigate } from 'react-router-dom';
-// Ensure this path is correct based on your project structure
 import ResumeTemplate from '../components/ResumeTemplate';
 
 const IS_DEV = window.location.hostname === 'localhost';
-const PRODUCTION_BACKEND_URL = "https://resume-ai-backend.onrender.com"; // ◄ UPDATE THIS with your Render URL!
+const PRODUCTION_BACKEND_URL = "https://resume-elet.onrender.com";
 const BACKEND_URL = IS_DEV ? "http://localhost:5000" : PRODUCTION_BACKEND_URL;
 
 export const autoGenerateResume = async (basicInfo) => {
@@ -81,7 +80,7 @@ const Preview = () => {
   const triggerPDFDownload = async () => {
     const targetElement = document.getElementById('resume-template');
     if (!targetElement) {
-      showNotification('Resume template not found. Please regenerate.', 'error');
+      showNotification('Resume template viewport not found. Please try again.', 'error');
       return;
     }
     
@@ -99,9 +98,10 @@ const Preview = () => {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${safeName}_Resume.pdf`);
+      pdf.save(`${safeName}_Jtech_Resume.pdf`);
+      showNotification('PDF downloaded successfully!', 'success');
     } catch (err) {
-      showNotification('PDF generation failed', 'error');
+      showNotification('PDF rendering failed. Please try again.', 'error');
     }
   };
 
@@ -126,7 +126,7 @@ const Preview = () => {
     const sdkLoaded = await loadRazorpaySDK();
 
     if (!sdkLoaded) {
-      showNotification('Failed to load payment gateway.', 'error');
+      showNotification('Unable to load payment gateway connection.', 'error');
       setIsProcessing(false);
       return;
     }
@@ -138,13 +138,13 @@ const Preview = () => {
       });
       const orderData = await response.json();
 
-      if (!orderData.success) throw new Error(orderData.error || 'Order creation failed.');
+      if (!orderData.success) throw new Error(orderData.error || 'Payment gateway order failed.');
 
       const checkoutOptions = {
         key: orderData.key,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'ResumeAI Premium',
+        name: 'Jtech ResumeAI',
         description: 'Lifetime Unlimited ATS Resume Downloads',
         order_id: orderData.sandbox ? undefined : orderData.id,
         handler: async function (paymentResponse) {
@@ -164,10 +164,10 @@ const Preview = () => {
             localStorage.setItem('resume_has_paid_premium', 'true');
             setHasPaid(true);
             setShowPaywallModal(false);
-            showNotification('Payment verified! Unlimited access unlocked.', 'success');
+            showNotification('Payment verified! Welcome to Jtech ResumeAI Premium.', 'success');
             triggerPDFDownload();
           } else {
-            showNotification('Verification failed: ' + verifyResult.error, 'error');
+            showNotification('Verification error: ' + verifyResult.error, 'error');
           }
         },
         prefill: {
@@ -175,37 +175,38 @@ const Preview = () => {
           email: data.email || 'candidate@example.com',
           contact: data.phone || '9999999999'
         },
-        theme: { color: '#4f46e5' }
+        theme: { color: '#6366f1' }
       };
 
       const rzp = new window.Razorpay(checkoutOptions);
       rzp.open();
     } catch (err) {
-      showNotification('Payment error: ' + err.message, 'error');
+      showNotification('Checkout error: ' + err.message, 'error');
     } finally {
       setIsProcessing(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f0f0f', padding: '40px 20px', position: 'relative' }}>
+    <div style={{ minHeight: '100vh', background: '#09090b', padding: '40px 20px', position: 'relative', fontFamily: 'system-ui, sans-serif' }}>
       
-      {/* Notification Toast */}
+      {/* Toast notifications */}
       {notification && (
         <div style={{
-          position: 'fixed', top: '20px', right: '20px', padding: '16px', borderRadius: '8px',
-          background: notification.type === 'error' ? '#ef4444' : '#22c55e', color: '#fff',
-          zIndex: 999999, boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
+          position: 'fixed', top: '24px', right: '24px', padding: '16px 24px', borderRadius: '12px',
+          background: notification.type === 'error' ? '#ef4444' : '#10b981', color: '#ffffff',
+          zIndex: 999999, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.4)', fontWeight: '600',
+          transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', gap: '8px'
         }}>
-          {notification.msg}
+          {notification.type === 'error' ? '❌' : '✨'} {notification.msg}
         </div>
       )}
 
-      <div style={{ textAlign: 'center', marginBottom: '16px', fontSize: '13px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '16px', fontSize: '14px' }}>
         {hasPaid ? (
-          <span style={{ color: '#44df85', fontWeight: 'bold' }}>🌟 Premium Unlimited Access Unlocked</span>
+          <span style={{ color: '#10b981', fontWeight: 'bold', letterSpacing: '0.05em' }}>🌟 Jtech Premium Access Unlocked</span>
         ) : (
-          <span style={{ color: '#888' }}>
+          <span style={{ color: '#a1a1aa' }}>
             Free Downloads Used:{' '}
             <strong style={{ color: downloadCount >= 3 ? '#ef4444' : '#ffffff' }}>
               {downloadCount}/3
@@ -215,9 +216,9 @@ const Preview = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginBottom: '32px', flexWrap: 'wrap' }}>
-        <button className="btn-secondary" onClick={() => navigate('/builder')}>← Edit Resume</button>
-        <button className="btn-primary" onClick={handleDownloadClick}>⬇️ Download PDF</button>
-        <button className="btn-secondary" onClick={() => navigate('/tailor')}>🎯 Tailor to JD</button>
+        <button className="btn-secondary" style={{ background: '#27272a', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }} onClick={() => navigate('/builder')}>← Edit Resume</button>
+        <button className="btn-primary" style={{ background: '#6366f1', color: '#ffffff', border: 'none', padding: '10px 24px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }} onClick={handleDownloadClick}>⬇️ Download PDF</button>
+        <button className="btn-secondary" style={{ background: '#27272a', color: '#ffffff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer' }} onClick={() => navigate('/tailor')}>🎯 Tailor with Jtech AI</button>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -226,37 +227,37 @@ const Preview = () => {
         </div>
       </div>
 
-      {/* Paywall Modal */}
+      {}
       {showPaywallModal && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+          background: 'rgba(9, 9, 11, 0.9)', backdropFilter: 'blur(12px)',
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           zIndex: 99999, padding: '20px'
         }}>
           <div style={{
-            background: '#1a1a2e', border: '2px solid #4f46e5', borderRadius: '16px',
-            width: '100%', maxWidth: '450px', padding: '32px',
-            boxShadow: '0 10px 30px rgba(79,70,229,0.25)',
-            textAlign: 'center', color: '#ffffff', fontFamily: 'Arial, sans-serif'
+            background: '#18181b', border: '1px solid #3f3f46', borderRadius: '24px',
+            width: '100%', maxWidth: '440px', padding: '36px',
+            boxShadow: '0 25px 50px -12px rgba(99, 102, 241, 0.25)',
+            textAlign: 'center', color: '#ffffff'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚀</div>
-            <h2 style={{ fontSize: '22px', fontWeight: '900', marginBottom: '12px' }}>
-              Unlock Unlimited ATS PDF Downloads
+            <div style={{ fontSize: '56px', marginBottom: '20px' }}>⚡</div>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '12px', letterSpacing: '-0.025em' }}>
+              Unlock Jtech ResumeAI Premium
             </h2>
-            <p style={{ fontSize: '14px', color: '#a0aec0', lineHeight: '1.6', marginBottom: '24px' }}>
-              You've used all 3 free downloads. Get unlimited PDF downloads forever with a one-time payment.
+            <p style={{ fontSize: '14px', color: '#a1a1aa', lineHeight: '1.6', marginBottom: '28px' }}>
+              You've utilized all 3 free trial resume downloads. Upgrade to enjoy unlimited resume creation and tailoring.
             </p>
 
             <div style={{
-              background: 'rgba(79,70,229,0.1)', border: '1.5px solid rgba(79,70,229,0.3)',
-              borderRadius: '10px', padding: '16px', marginBottom: '24px'
+              background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.25)',
+              borderRadius: '16px', padding: '20px', marginBottom: '28px'
             }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#818cf8', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#818cf8', fontWeight: 'bold', display: 'block', marginBottom: '4px', letterSpacing: '0.05em' }}>
                 One-Time Payment
               </span>
-              <span style={{ fontSize: '32px', fontWeight: '900' }}>
-                ₹39 <span style={{ fontSize: '16px', color: '#a0aec0', fontWeight: 'normal' }}>only</span>
+              <span style={{ fontSize: '36px', fontWeight: '900' }}>
+                ₹39 <span style={{ fontSize: '16px', color: '#a1a1aa', fontWeight: 'normal' }}>only</span>
               </span>
             </div>
 
@@ -264,10 +265,11 @@ const Preview = () => {
               onClick={handlePaymentCheckout}
               disabled={isProcessing}
               style={{
-                width: '100%', background: isProcessing ? '#3730a3' : '#4f46e5',
-                color: '#ffffff', border: 'none', padding: '14px', borderRadius: '8px',
-                fontWeight: 'bold', fontSize: '15px', cursor: isProcessing ? 'not-allowed' : 'pointer',
-                boxShadow: '0 4px 14px rgba(79,70,229,0.4)', transition: 'all 0.2s'
+                width: '100%', background: isProcessing ? '#4338ca' : '#6366f1',
+                color: '#ffffff', border: 'none', padding: '16px', borderRadius: '12px',
+                fontWeight: 'bold', fontSize: '16px', cursor: isProcessing ? 'not-allowed' : 'pointer',
+                boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.4)', transition: 'all 0.2s',
+                letterSpacing: '0.02em'
               }}
             >
               {isProcessing ? 'Connecting...' : 'Pay ₹39 with UPI / Card'}
@@ -276,11 +278,11 @@ const Preview = () => {
             <button
               onClick={() => setShowPaywallModal(false)}
               style={{
-                marginTop: '16px', background: 'transparent', color: '#a0aec0',
+                marginTop: '20px', background: 'transparent', color: '#a1a1aa',
                 border: 'none', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline'
               }}
             >
-              Cancel
+              Cancel & Keep Editing
             </button>
           </div>
         </div>
